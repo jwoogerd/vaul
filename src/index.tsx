@@ -352,7 +352,7 @@ function Root({
       if (isInput(focusedElement) || keyboardIsOpen.current) {
         const visualViewportHeight = window.visualViewport?.height || 0;
         // This is the height of the keyboard
-        let diffFromInitial = window.innerHeight - visualViewportHeight;
+        let diffFromInitial = window.outerHeight - visualViewportHeight;
         const drawerHeight = drawerRef.current.getBoundingClientRect().height || 0;
         if (!initialDrawerHeight.current) {
           initialDrawerHeight.current = drawerHeight;
@@ -370,8 +370,12 @@ function Root({
         }
 
         previousDiffFromInitial.current = diffFromInitial;
-        // We don't have to change the height if the input is in view, when we are here we are in the opened keyboard state so we can correctly check if the input is in view
-        if (drawerHeight > visualViewportHeight || keyboardIsOpen.current) {
+
+        if (!keyboardIsOpen.current) {
+          drawerRef.current.style.removeProperty('height');
+          drawerRef.current.style.removeProperty('bottom');
+        } else if (drawerHeight > visualViewportHeight) {
+          // We don't have to change the height if the input is in view, when we are here we are in the opened keyboard state so we can correctly check if the input is in view
           const height = drawerRef.current.getBoundingClientRect().height;
           let newDrawerHeight = height;
 
@@ -384,15 +388,10 @@ function Root({
           } else {
             drawerRef.current.style.height = `${Math.max(newDrawerHeight, visualViewportHeight - offsetFromTop)}px`;
           }
+          drawerRef.current.style.bottom = '0px';
         } else {
-          drawerRef.current.style.height = `${initialDrawerHeight.current}px`;
-        }
-
-        if (snapPoints && snapPoints.length > 0 && !keyboardIsOpen.current) {
-          drawerRef.current.style.bottom = `0px`;
-        } else {
-          // Negative bottom value would never make sense
-          drawerRef.current.style.bottom = `${Math.max(diffFromInitial, 0)}px`;
+          drawerRef.current.style.height = `${drawerRef.current.getBoundingClientRect().height}px`;
+          drawerRef.current.style.bottom = '0px';
         }
       }
     }
